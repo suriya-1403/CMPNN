@@ -226,7 +226,7 @@ class LinkPrediction(tasks.Task, core.Configurable):
         pattern = torch.stack([neg_h_index, any], dim=-1)
         edge_index, num_t_truth = graph.match(pattern)
         t_truth_index = graph.edge_list[edge_index, 1]
-        pos_index = functional._size_to_index(num_t_truth)
+        pos_index = torch.repeat_interleave(torch.arange(num_t_truth.size(0), device=num_t_truth.device), num_t_truth)
         t_mask = torch.ones(count, self.num_node, dtype=torch.bool, device=self.device)
         t_mask[pos_index, t_truth_index] = 0
         t_mask.scatter_(1, neg_h_index.unsqueeze(-1), 0)
@@ -403,7 +403,7 @@ class InductiveKnowledgeGraphCompletion(
         pattern = torch.stack([pos_h_index, any, pos_r_index], dim=-1)
         edge_index, num_t_truth = graph.match(pattern)
         t_truth_index = graph.edge_list[edge_index, 1]
-        pos_index = functional._size_to_index(num_t_truth)
+        pos_index = torch.repeat_interleave(torch.arange(num_t_truth.size(0), device=num_t_truth.device), num_t_truth)
         t_mask = torch.ones(
             batch_size, graph.num_node, dtype=torch.bool, device=self.device
         )
@@ -412,7 +412,7 @@ class InductiveKnowledgeGraphCompletion(
         pattern = torch.stack([any, pos_t_index, pos_r_index], dim=-1)
         edge_index, num_h_truth = graph.match(pattern)
         h_truth_index = graph.edge_list[edge_index, 0]
-        pos_index = functional._size_to_index(num_h_truth)
+        pos_index = torch.repeat_interleave(torch.arange(num_h_truth.size(0), device=num_h_truth.device), num_h_truth)
         h_mask = torch.ones(
             batch_size, graph.num_node, dtype=torch.bool, device=self.device
         )
@@ -542,7 +542,7 @@ class KnowledgeGraphCompletionOGB(tasks.KnowledgeGraphCompletion, core.Configura
         pattern = pattern[: batch_size // 2]
         edge_index, num_t_truth = self.fact_graph.match(pattern)
         t_truth_index = self.fact_graph.edge_list[edge_index, 1]
-        pos_index = functional._size_to_index(num_t_truth)
+        pos_index = torch.repeat_interleave(torch.arange(num_t_truth.size(0), device=num_t_truth.device), num_t_truth)
         if self.heterogeneous_negative:
             pos_t_type = node_type[pos_t_index[: batch_size // 2]]
             t_mask = pos_t_type.unsqueeze(-1) == node_type.unsqueeze(0)
@@ -561,7 +561,7 @@ class KnowledgeGraphCompletionOGB(tasks.KnowledgeGraphCompletion, core.Configura
         pattern = pattern[batch_size // 2 :]
         edge_index, num_h_truth = self.fact_graph.match(pattern)
         h_truth_index = self.fact_graph.edge_list[edge_index, 0]
-        pos_index = functional._size_to_index(num_h_truth)
+        pos_index = torch.repeat_interleave(torch.arange(num_h_truth.size(0), device=num_h_truth.device), num_h_truth)
         if self.heterogeneous_negative:
             pos_h_type = node_type[pos_h_index[batch_size // 2 :]]
             h_mask = pos_h_type.unsqueeze(-1) == node_type.unsqueeze(0)
